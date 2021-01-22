@@ -1,0 +1,14 @@
+diff --git a/loadgen/logging.cc b/loadgen/logging.cc
+index d5afe40..261f533 100644
+--- a/loadgen/logging.cc
++++ b/loadgen/logging.cc
+@@ -360,7 +360,7 @@ PerfClock::time_point AsyncLog::GetMaxCompletionTime() {
+ }
+ 
+ QuerySampleLatency AsyncLog::GetMaxLatencySoFar() {
+-  return max_latency_.load(std::memory_order_release);
++  return max_latency_.load(std::memory_order_acquire);
+ }
+ 
+ /// \brief Records a single thread using thread-local storage and submits
+

@@ -1,0 +1,7 @@
+apiVersion: tekton.dev/v1beta1
+kind: PipelineRun
+metadata:
+  name: mlperf-inference
+spec:
+  pipelineRef:
+    name: mlperf-inference

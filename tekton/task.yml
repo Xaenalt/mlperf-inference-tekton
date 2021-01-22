@@ -1,0 +1,20 @@
+apiVersion: tekton.dev/v1beta1
+kind: Task
+metadata:
+  name: run-resnet-val
+spec:
+  steps:
+    - name: resnet50
+      image: image-registry.openshift-image-registry.svc:5000/gpu-pipeline/mlperf-ubi8-gpu:cuda11.0-cudnn8
+      securityContext:
+        runAsUser: 0
+      script: |
+        #!/usr/bin/env bash
+        echo $USER
+        export MODEL_DIR='/models'
+        export DATA_DIR="$(cat /dataset_locations/imagenet_val)"
+        cd /inference/vision/classification_and_detection/
+        ./run_local.sh tf resnet50 gpu
+        cd output/tf-gpu/resnet50/
+        echo 'DETAIL LOG'
+        cat mlperf_log_detail.txt

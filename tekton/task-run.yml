@@ -1,0 +1,7 @@
+apiVersion: tekton.dev/v1beta1
+kind: TaskRun
+metadata:
+  name: run-resnet-val-task-run
+spec:
+  taskRef:
+    name: run-resnet-val

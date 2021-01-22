@@ -1,0 +1,50 @@
+FROM quay.io/spryor/tensorflow:cuda11.0-cudnn8
+
+RUN yum -y install python38 python38-pip python38-devel gcc-toolset-10 gcc-toolset-10-gcc-c++ git wget cmake make unzip patch && \
+source /opt/rh/gcc-toolset-10/enable && \
+mkdir /usr/local/nvidia && \
+ln -s /usr/local/cuda/targets/x86_64-linux/lib/ /usr/local/nvidia/lib && \
+python3 -m pip install --upgrade pip setuptools wheel && \
+python3 -m pip install ck absl-py pybind11-global scikit-build && \
+python3 -m pip install protobuf-compiler && \
+git clone https://github.com/mlperf/inference.git -b r0.7 /inference && \
+cd /inference/vision/classification_and_detection/ && \
+pushd ../../loadgen && \
+sed -i 's/return max_latency_.load(std::memory_order_release);/return max_latency_.load(std::memory_order_acquire);/' logging.cc && \
+CFLAGS="-std=c++14" python3 setup.py develop && \
+popd && \
+python3 setup.py develop && \
+mkdir /models && \
+pushd /models && \
+wget https://zenodo.org/record/2535873/files/resnet50_v1.pb && \
+wget https://zenodo.org/record/2592612/files/resnet50_v1.onnx && \
+wget https://zenodo.org/record/2269307/files/mobilenet_v1_1.0_224.tgz && \
+tar -xf mobilenet_v1_1.0_224.tgz && \
+wget https://zenodo.org/record/2269307/files/mobilenet_v1_1.0_224_quant.tgz && \
+tar -xf mobilenet_v1_1.0_224_quant.tgz && \
+wget https://zenodo.org/record/3157894/files/mobilenet_v1_1.0_224.onnx && \
+wget https://zenodo.org/record/3353417/files/Quantized%20MobileNet.zip && \
+unzip Quantized\ MobileNet.zip && \
+wget http://download.tensorflow.org/models/object_detection/ssd_mobilenet_v1_coco_2018_01_28.tar.gz && \
+tar -xf ssd_mobilenet_v1_coco_2018_01_28.tar.gz && \
+wget https://zenodo.org/record/3252084/files/mobilenet_v1_ssd_8bit_finetuned.tar.gz && \
+tar -xf mobilenet_v1_ssd_8bit_finetuned.tar.gz && \
+wget https://zenodo.org/record/3401714/files/ssd_mobilenet_v1_quant_ft_no_zero_point_frozen_inference_graph.pb && \
+wget https://zenodo.org/record/3239977/files/ssd_mobilenet_v1.pytorch && \
+wget https://zenodo.org/record/3163026/files/ssd_mobilenet_v1_coco_2018_01_28.onnx && \
+wget https://zenodo.org/record/3252084/files/mobilenet_v1_ssd_8bit_finetuned.tar.gz && \
+tar -xzf mobilenet_v1_ssd_8bit_finetuned.tar.gz && \
+wget https://zenodo.org/record/3345892/files/tf_ssd_resnet34_22.1.zip && \
+unzip tf_ssd_resnet34_22.1.zip && \
+wget https://zenodo.org/record/3236545/files/resnet34-ssd1200.pytorch && \
+wget https://zenodo.org/record/3228411/files/resnet34-ssd1200.onnx && \
+python3 -m pip install --no-cache-dir ck && \
+export HOME=/ && \
+ck pull repo:ck-env && \
+mkdir /dataset_locations && \
+ck install package --tags=image-classification,dataset,imagenet,val,original,resized && \
+ck install package --tags=image-classification,dataset,imagenet,aux && \
+cp $(ck locate env --tags=aux)/val.txt $(ck locate env --tags=val)/val_map.txt && \
+ck locate env --tags=image-classification,dataset,imagenet,val,original,resized > /dataset_locations/imagenet_val && \
+ck install package --tags=object-detection,dataset,coco,2017,val,original && \
+ck locate env --tags=object-detection,dataset,coco,2017,val,original > /dataset_locations/coco_val
